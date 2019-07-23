@@ -86,13 +86,13 @@ echo "[DEBUG]: out: $out"
 # Taking the screenshot
 
 if [ $r == "y" ]; then
-    scrot -s "$out"
+    maim -s "$out"
     eval $clip
 elif [ $f == "y" ]; then
-    scrot "$out"
+    maim "$out"
     eval $clip
 elif [ $w == "y" ]; then
-    scrot -u "$out"
+    maim -i $(xdotool getactivewindow) "$out"
     eval $clip
 elif [ $m == "y" ]; then
     scrot -m "$out"
