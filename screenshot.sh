@@ -3,10 +3,25 @@
 # Parsing arguments
 # TODO: --help
 
+help () {
+    echo "Usage: $0 [options]
+
+    Options:
+        -h, --help          Show help
+        -r, --region        Captures the screen withing a selected region
+        -f, --full          Captures the whole screen
+        -w, --window        Captures the current window
+        -m, --multi         Captures all monitors
+        -c, --colorpicker   Shows the hex color of a selected pixel
+        -q, --QR            Decodes a selected QR code
+        -c, --clipboard     Copy the output to the clipboard
+        -s, --save PATH     Saves the output to a path"
+}
+
 # TODO: Upload
 
-OPTIONS=rfwmpqcs: #u:
-LONGOPTS=region,full,window,multi,colorpicker,QR,clipboard,save: #,upload:
+OPTIONS=hrfwmpqcs: #u:
+LONGOPTS=help,region,full,window,multi,colorpicker,QR,clipboard,save: #,upload:
 ! PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTS --name "$0" -- "$@")
 if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
     exit 2
@@ -18,6 +33,10 @@ n=0
 
 while true; do
     case "$1" in
+        -h|--help)
+            help
+            exit 2
+            ;;
         -r|--region)
             r=y
             ((n++))
@@ -70,9 +89,6 @@ done
 if [ $n -gt 1 ]; then
     echo "$0: You can't take a different types of screenshots at the same time!"
     exit 1
-elif [ [ $c == "n" ] && [ $s == "n" ] && [ $u == "n" ] ] && [ $p != "y" ]; then
-    echo "$0: I don't know what I'm supposed to do with the image!"
-    exit 1
 elif [ $p == "y" ] && [ $s == "y" ]; then
     echo "You can't save hex colors."
 elif [ $p == "y" ] && [ $c == "y" ]; then
@@ -93,9 +109,6 @@ if [ ${out##*.} != "png" ]; then
     echo "$0: Output must be a png, sorry!"
     exit 1
 fi
-
-echo "[DEBUG]: region: $r, full: $f, window: $w, clipboard: $c, save: $s, upload: $u"
-echo "[DEBUG]: out: $out"
 
 monitorShot () {
     # https://gist.github.com/naelstrof/f9b74b5221cdc324c0911c89a47b8d97
@@ -130,18 +143,22 @@ monitorShot () {
     fi
 }
 
-# Taking the screenshot
-
-if [ $r == "y" ]; then
+regionShot () {
     monitorShot temp.png
     feh temp.png -FNYx. &
     pid=$!
-    maim -s "$out"
+    maim -s "$1"
     ex=$?
     kill $pid
     if [ $ex != 0 ]; then
         exit 1
     fi
+}
+
+# Taking the screenshot
+
+if [ $r == "y" ]; then
+    regionShot "$out"
     eval $clip
 elif [ $f == "y" ]; then
     monitorShot "$out"
@@ -155,11 +172,13 @@ elif [ $m == "y" ]; then
 elif [ $p == "y" ]; then
     col=$(colorpicker --one-shot --short)
     notify-send "Color: $col"
+    echo "$col"
     echo -ne "$col"|xclip -selection c
 elif [ $q == "y" ]; then
-    maim -s qr.png
+    regionShot qr.png
     text=$(zbarimg -q --raw qr.png)
     notify-send "The code reads:" "$text"
+    echo "$text"
     echo -ne "$text"|xclip -selection c
 fi
 
