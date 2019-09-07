@@ -97,12 +97,7 @@ fi
 echo "[DEBUG]: region: $r, full: $f, window: $w, clipboard: $c, save: $s, upload: $u"
 echo "[DEBUG]: out: $out"
 
-# Taking the screenshot
-
-if [ $r == "y" ]; then
-    maim -s "$out"
-    eval $clip
-elif [ $f == "y" ]; then
+monitorShot () {
     # https://gist.github.com/naelstrof/f9b74b5221cdc324c0911c89a47b8d97
     found="n"
     MONITORS=$(xrandr | grep -o '[0-9]*x[0-9]*[+-][0-9]*[+-][0-9]*')
@@ -122,7 +117,7 @@ elif [ $f == "y" ]; then
             if (( ${YMOUSE} >= ${MONY} )); then
               if (( ${YMOUSE} <= ${MONY}+${MONH} )); then
                 # We have found our monitor!
-                maim -g "${MONW}x${MONH}+${MONX}+${MONY}" "$out"
+                maim -g "${MONW}x${MONH}+${MONX}+${MONY}" "$1"
                 found="y"
               fi
             fi
@@ -133,6 +128,23 @@ elif [ $f == "y" ]; then
         echo "Oh no! The mouse is in the void!"
         exit 1
     fi
+}
+
+# Taking the screenshot
+
+if [ $r == "y" ]; then
+    monitorShot temp.png
+    feh temp.png -FNYx. &
+    pid=$!
+    maim -s "$out"
+    ex=$?
+    kill $pid
+    if [ $ex != 0 ]; then
+        exit 1
+    fi
+    eval $clip
+elif [ $f == "y" ]; then
+    monitorShot "$out"
     eval $clip
 elif [ $w == "y" ]; then
     maim -i $(xdotool getactivewindow) "$out"
