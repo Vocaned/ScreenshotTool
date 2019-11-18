@@ -12,7 +12,7 @@ help () {
         -f, --full          Captures the whole screen
         -w, --window        Captures the current window
         -m, --multi         Captures all monitors
-        -c, --colorpicker   Shows the hex color of a selected pixel
+        -p, --colorpicker   Shows the hex color of a selected pixel
         -q, --QR            Decodes a selected QR code
         -c, --clipboard     Copy the output to the clipboard
         -s, --save PATH     Saves the output to a path"
